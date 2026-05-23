@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Service {
+  id             String             @id @default(cuid())
+  name           String             @unique
+  leads          Lead[]
+  allocationState AllocationState?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+}
+
+model Provider {
+  id              String           @id @default(cuid())
+  name            String           @unique
+  monthlyQuota    Int              @default(10)
+  quotaRemaining  Int              @default(10)
+  assignments     LeadAssignment[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Lead {
+  id           String           @id @default(cuid())
+  name         String
+  phoneNumber  String
+  city         String
+  description  String?
+  service      Service          @relation(fields: [serviceId], references: [id])
+  serviceId    String
+  assignments  LeadAssignment[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([phoneNumber, serviceId])
+  @@index([serviceId])
+}
+
+model LeadAssignment {
+  id          String     @id @default(cuid())
+  lead        Lead       @relation(fields: [leadId], references: [id])
+  leadId      String
+  provider    Provider   @relation(fields: [providerId], references: [id])
+  providerId  String
+  assignedAt  DateTime   @default(now())
+  assignedKind AssignmentKind @default(FAIR)
+
+  @@unique([leadId, providerId])
+  @@index([providerId])
+  @@index([leadId])
+}
+
+enum AssignmentKind {
+  MANDATORY
+  FAIR
+}
+
+model AllocationState {
+  id             String   @id @default(cuid())
+  service        Service  @relation(fields: [serviceId], references: [id])
+  serviceId      String   @unique
+  nextPoolIndex  Int      @default(0)
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+}
+
+model WebhookEvent {
+  id          String   @id @default(cuid())
+  externalId  String   @unique
+  eventType   String
+  payload     Json?
+  succeeded   Boolean  @default(false)
+  processedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([eventType])
+}
