@@ -24,7 +24,7 @@ export async function processWebhookEvent(
           data: {
             externalId,
             eventType,
-            payload: payload ?? {}
+            payload: payload ?? Prisma.JsonNull
           }
         }));
 
@@ -44,7 +44,7 @@ export async function processWebhookEvent(
         data: {
           succeeded: true,
           processedAt: new Date(),
-          payload: payload ?? {}
+          payload: payload ?? Prisma.JsonNull
         }
       });
     },
