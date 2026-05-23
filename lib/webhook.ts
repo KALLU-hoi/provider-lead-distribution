@@ -18,13 +18,16 @@ export async function processWebhookEvent(
         return existingEvent;
       }
 
+      const payloadValue: Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined =
+        payload === undefined ? undefined : payload === null ? Prisma.JsonNull : (payload as Prisma.InputJsonValue);
+
       const event =
         existingEvent ??
         (await tx.webhookEvent.create({
           data: {
             externalId,
             eventType,
-            payload: payload ?? null
+            payload: payloadValue
           }
         }));
 
@@ -44,7 +47,7 @@ export async function processWebhookEvent(
         data: {
           succeeded: true,
           processedAt: new Date(),
-          payload: payload ?? null
+          payload: payloadValue
         }
       });
     },
